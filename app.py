@@ -76,10 +76,7 @@ menggunakan algoritma **Random Forest Regression**.
 - Panjang ikan Yellowfin Tuna (cm)
 
 **Sumber data:**
-Data hasil port sampling **Yayasan MDPI** di **Pulau Buru** periode **2020–2025** yang telah melalui proses preprocessing dan pelatihan model machine learning.
-
-Silakan unggah file Excel (.xlsx) yang memiliki struktur kolom sesuai dengan data pelatihan untuk melakukan prediksi.
-""")
+Data hasil port sampling **Yayasan MDPI** di **Pulau Buru** periode **2020–2025** yang telah melalui proses preprocessing dan pelatihan model machine learning.""")
 
 
 #Petunjuk data upload
@@ -161,7 +158,7 @@ if uploaded_file is None:
         <div style='text-align: center; margin-top: 30px; margin-bottom: 20px; color: #666666;'>
             <p style='font-size: 16px;'><strong>Dashboard Prediksi Ukuran Yellowfin Tuna (<i>Thunnus albacares</i>)</strong></p>
             <p style='font-size: 14px;'>Dikembangkan untuk mendukung analisis data dan pengelolaan perikanan tuna yang berkelanjutan.</p>
-            <p style='font-size: 12px; margin-top: 10px;'>&copy; 2026 Yayasan MDPI. Hak Cipta Dilindungi.</p>
+            <p style='font-size: 12px; margin-top: 10px;'>&copy; 2026 Yayasan MDPI. Hak Cipta Dilindungi. <i>Happy People Many Fish</i></p>
         </div>
         """,
         unsafe_allow_html=True
