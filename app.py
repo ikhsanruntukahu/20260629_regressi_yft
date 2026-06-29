@@ -13,6 +13,15 @@ from sklearn.metrics import (
     mean_squared_error
 )
 
+#Konfigurasi Awal dan Styling Halaman
+st.markdown("""
+<style>
+.block-container{
+    padding-top:2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
 #Import logo/gambar
 
 logo = Image.open("_ MDPI Primary Logo.png")
