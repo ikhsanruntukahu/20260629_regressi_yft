@@ -92,6 +92,7 @@ st.markdown(
     unsafe_allow_html=True)
 
 
+
 petunjuk = pd.DataFrame({
     "Nama Kolom": [
         "Bulan",
@@ -131,6 +132,7 @@ petunjuk = pd.DataFrame({
     ]
 })
 
+# Menggunakan width='stretch' agar kompatibel penuh dengan Pandas & Streamlit versi 2026 terbaru
 st.dataframe(
     petunjuk,
     use_container_width=True, # Melebarkan tabel mengikuti lebar layar
@@ -148,113 +150,127 @@ uploaded_file = st.file_uploader(
     type=["xlsx"]
 )
 
-if uploaded_file is not None:
+#Blok pengecekan kondisi awal
+if uploaded_file is None:
+    st.info("**Silakan masukan data Anda:** Unggah file Excel (.xlsx) yang sesuai dengan struktur kolom di atas untuk memproses analisis model regresi dan melihat hasil prediksi visual.")
+    
+    # Tampilkan footer standar saat data masih kosong
+    st.markdown("---")
+    st.markdown(
+        """
+        <div style='text-align: center; margin-top: 30px; margin-bottom: 20px; color: #666666;'>
+            <p style='font-size: 16px;'><strong>Dashboard Prediksi Ukuran Yellowfin Tuna (<i>Thunnus albacares</i>)</strong></p>
+            <p style='font-size: 14px;'>Dikembangkan untuk mendukung analisis data dan pengelolaan perikanan tuna yang berkelanjutan.</p>
+            <p style='font-size: 12px; margin-top: 10px;'>&copy; 2026 Yayasan MDPI. Hak Cipta Dilindungi.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.stop() # Menghentikan aplikasi di sini dengan aman sebelum membaca variabel di bawah!
+    
+# Membaca data
+df = pd.read_excel(uploaded_file)
 
-    # Membaca data
-    df = pd.read_excel(uploaded_file)
+st.subheader("Preview Data")
+st.dataframe(df)
 
-    st.subheader("Preview Data")
-    st.dataframe(df)
+# Feature dan target
+fitur = [
+    "Bulan",
+    "sst",
+    "chl-a",
+    "Teknik_penangkapan",
+    "kedalaman_min",
+    "kedalaman_max"]
 
-    # Feature dan target
-    fitur = [
-        "Bulan",
-        "sst",
-        "chl-a",
-        "Teknik_penangkapan",
-        "kedalaman_min",
-        "kedalaman_max"
-    ]
+target = "panjang_yft"
 
-    target = "panjang_yft"
+# Cek apakah semua kolom tersedia
+kolom_harus_ada = fitur + [target]
 
-    # Cek apakah semua kolom tersedia
-    kolom_harus_ada = fitur + [target]
+if not all(col in df.columns for col in kolom_harus_ada):
+    st.error("Kolom pada file Excel tidak sesuai.")
+    st.stop()
 
-    if not all(col in df.columns for col in kolom_harus_ada):
-        st.error("Kolom pada file Excel tidak sesuai.")
-        st.stop()
-
-    X = df[fitur]
-    y = df[target]
+X = df[fitur]
+y = df[target]
 
 # Buat informasi statistik
-    # ==========================================
-    st.subheader("Ringkasan Statistik Data")
 
-    #missing value
-    missing_value = df.isnull().sum()
+st.subheader("Ringkasan Statistik Data")
+
+#missing value
+missing_value = df.isnull().sum()
     
-    # 1. Statistik Kolom Numerik
-    st.markdown("##### Variabel Numerik")
+# 1. Statistik Kolom Numerik
+st.markdown("##### Variabel Numerik")
     
-   # Mengambil statistik deskriptif dasar
-    stat_numerik = df.describe().T 
+# Mengambil statistik deskriptif dasar
+stat_numerik = df.describe().T 
     
-    # Menghitung nilai median dan modus
-    modus_numerik = df.select_dtypes(include='number').mode().iloc[0]
+# Menghitung nilai median dan modus
+modus_numerik = df.select_dtypes(include='number').mode().iloc[0]
     
-    # Menambahkan kolom median, modus, dan jumlah kosong (missing values)
-    stat_numerik['modus'] = modus_numerik
-    stat_numerik['NA'] = missing_value
+# Menambahkan kolom median, modus, dan jumlah kosong (missing values)
+stat_numerik['modus'] = modus_numerik
+stat_numerik['NA'] = missing_value
     
-    # Membulatkan semua nilai desimal menjadi 2 angka di belakang koma
-    stat_numerik = stat_numerik.round(2)
+# Membulatkan semua nilai desimal menjadi 2 angka di belakang koma
+stat_numerik = stat_numerik.round(2)
     
-    # Mengubah nama indeks menjadi kolom agar bisa disembunyikan indeks bawaannya
-    stat_numerik.insert(0, "Nama Variabel", stat_numerik.index)
+# Mengubah nama indeks menjadi kolom agar bisa disembunyikan indeks bawaannya
+stat_numerik.insert(0, "Nama Variabel", stat_numerik.index)
     
-    # Menghitung tinggi dinamis agar pas (jumlah baris * 35px) + 80px buffer header/padding
-    tinggi_numerik = (len(stat_numerik) * 35) + 80
+# Menghitung tinggi dinamis agar pas (jumlah baris * 35px) + 80px buffer header/padding
+tinggi_numerik = (len(stat_numerik) * 35) + 80
     
-    st.dataframe(
-        stat_numerik, 
-        use_container_width=True, 
-        hide_index=True,
-        height=int(tinggi_numerik)
+st.dataframe(
+    stat_numerik, 
+    use_container_width=True, 
+    hide_index=True,
+    height=int(tinggi_numerik)
     )
 
-    # 2. Statistik Kolom Kategorikal / Teks
-    if df.select_dtypes(include=['object']).shape[1] > 0:
-        st.markdown("##### Variabel Kategori")
+# 2. Statistik Kolom Kategorikal / Teks
+if df.select_dtypes(include=['object']).shape[1] > 0:
+    st.markdown("##### Variabel Kategori")
         
-        # Mengambil statistik deskriptif kategori
-        stat_kategori = df.describe(include=['object']).T 
+# Mengambil statistik deskriptif kategori
+stat_kategori = df.describe(include=['object']).T 
         
-        # Menambahkan kolom jumlah kosong (missing values) khusus kategori
-        stat_kategori['NA'] = missing_value
+# Menambahkan kolom jumlah kosong (missing values) khusus kategori
+stat_kategori['NA'] = missing_value
         
-        # Mengubah nama indeks menjadi kolom
-        stat_kategori.insert(0, "Nama Variabel", stat_kategori.index)
+#Mengubah nama indeks menjadi kolom
+stat_kategori.insert(0, "Nama Variabel", stat_kategori.index)
         
-        # Menghitung tinggi dinamis untuk tabel kategori
-        tinggi_kategori = (len(stat_kategori) * 35) + 80
+# Menghitung tinggi dinamis untuk tabel kategori
+tinggi_kategori = (len(stat_kategori) * 35) + 80
         
-        st.dataframe(
-            stat_kategori, 
-            use_container_width=True, 
-            hide_index=True,
-            height=int(tinggi_kategori)
-        )
+st.dataframe(
+    stat_kategori, 
+    use_container_width=True, 
+    hide_index=True,
+    height=int(tinggi_kategori))
+
     # ==========================================
 
 
 # ==========================================
-    # Analisis Korelasi Variabel Numerik
-    # ==========================================
-    st.subheader("Matriks Korelasi")
-    
-    # Menentukan variabel 
-    corr_vars = [
-        'panjang_yft',
-        'chl-a',
-        'kedalaman_min',
-        'kedalaman_max',
-        'sst',
-    ]
+# Analisis Korelasi Variabel Numerik
 
-    # Memastikan semua kolom tersedua
-    if all(col in df.columns for col in corr_vars):
+st.subheader("Matriks Korelasi")
+    
+# Menentukan variabel 
+corr_vars = [
+    'panjang_yft',
+    'chl-a',
+    'kedalaman_min',
+    'kedalaman_max',
+    'sst',]
+
+# Memastikan semua kolom tersedua
+if all(col in df.columns for col in corr_vars):
         corr_matrix = df[corr_vars].corr()
 
         # Menggunakan struktur figure dari matplotlib untuk disalurkan ke Streamlit
@@ -274,28 +290,28 @@ if uploaded_file is not None:
         # Menampilkan plot ke web Streamlit
         st.pyplot(fig_corr)
         plt.close(fig_corr)
-    else:
+else:
         st.warning("Beberapa kolom yang dibutuhkan untuk korelasi tidak ditemukan.")
     # ==========================================
 
 
 
-    # Prediksi
-    prediksi = my_model.predict(X)
-    df["Prediksi_panjang_yft"] = prediksi
+# Prediksi
+prediksi = my_model.predict(X)
+df["Prediksi_panjang_yft"] = prediksi
 
-    # ===========================
-    # Evaluasi Model
-    # ===========================
-    r2 = r2_score(y, prediksi)
-    mae = mean_absolute_error(y, prediksi)
-    rmse = np.sqrt(mean_squared_error(y, prediksi))
-    n_samples = len(y) # Menghitung jumlah sample
+# ===========================
+# Evaluasi Model
+# ===========================
+r2 = r2_score(y, prediksi)
+mae = mean_absolute_error(y, prediksi)
+rmse = np.sqrt(mean_squared_error(y, prediksi))
+n_samples = len(y) # Menghitung jumlah sample
 
-    st.markdown("### Evaluasi Model")
+st.markdown("### Evaluasi Model")
 
-    # Tambahan CSS agar st.metric terlihat seperti 'Card'
-    st.markdown("""
+# Tambahan CSS agar st.metric terlihat seperti 'Card'
+st.markdown("""
     <style>
     div[data-testid="metric-container"] {
         background-color: #f7f9fc;
@@ -308,25 +324,25 @@ if uploaded_file is not None:
     </style>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4 = st.columns(4)
 
-    # Menambahkan argumen 'help' untuk tooltip dan merapikan format label
-    col1.metric(
+# Menambahkan argumen 'help' untuk tooltip dan merapikan format label
+col1.metric(
         label="R² Score", 
         value=f"{r2:.3f}".replace(".", ","), # Output: 0,733
         help="Koefisien Determinasi: Semakin mendekati 1, model semakin mampu memprediksi dengan akurat."
     )
-    col2.metric(
+col2.metric(
         label="MAE", 
         value=f"{mae:.2f}".replace(".", ",") + " cm", # Output: 11,60 cm
         help="Mean Absolute Error: Rata-rata selisih jarak (error) antara prediksi dan nilai aktual."
     )
-    col3.metric(
+col3.metric(
         label="RMSE", 
         value=f"{rmse:.2f}".replace(".", ",") + " cm", # Output: 19,30 cm
         help="Root Mean Square Error: Memberikan 'penalti' lebih besar pada error yang melenceng jauh."
     )
-    col4.metric(
+col4.metric(
         label="Total Sample", 
         value=f"{n_samples:,}".replace(",", "."), # Mengubah format 15194 menjadi 15.194
         help="Jumlah baris data observasi (ikan) yang dievaluasi."
@@ -706,21 +722,17 @@ st.download_button(
     )
 
 
-# ===========================
-# Penutup / Footer
+# =====================================================================
 
-st.markdown("---") # Garis pembatas
-
-# Kondisi jika file belum dimasukkan (Sejajar di kiri dengan 'if')
-st.info("💡 **Silakan masukan data Anda:** Unggah file Excel (.xlsx) yang sesuai dengan struktur kolom di atas untuk memproses analisis model regresi dan melihat hasil prediksi visual.")
-
+# Footer Akhir
+st.markdown("---")
 st.markdown(
     """
-        <div style='text-align: center; margin-top: 30px; margin-bottom: 20px; color: #666666;'>
-            <p style='font-size: 16px;'><strong>Dashboard Prediksi Ukuran Yellowfin Tuna (<i>Thunnus albacares</i>)</strong></p>
-            <p style='font-size: 14px;'>Dikembangkan untuk mendukung analisis data dan pengelolaan perikanan tuna yang berkelanjutan.</p>
-            <p style='font-size: 12px; margin-top: 10px;'>&copy; 2026 Yayasan MDPI. Hak Cipta Dilindungi.</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    <div style='text-align: center; margin-top: 30px; margin-bottom: 20px; color: #666666;'>
+        <p style='font-size: 16px;'><strong>Dashboard Prediksi Ukuran Yellowfin Tuna (<i>Thunnus albacares</i>)</strong></p>
+        <p style='font-size: 14px;'>Dikembangkan untuk mendukung analisis data dan pengelolaan perikanan tuna yang berkelanjutan</p>
+        <p style='font-size: 12px; margin-top: 10px;'>&copy; 2026 Yayasan MDPI. Hak Cipta Dilindungi. <i>Happy People Many Fish</i>.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
