@@ -10,4 +10,5 @@ scipy
 streamlit
 lightgbm
 matplotlib
+shap
 openpyxl
