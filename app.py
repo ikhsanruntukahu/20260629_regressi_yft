@@ -710,7 +710,10 @@ st.download_button(
 # Penutup / Footer
 
 st.markdown("---") # Garis pembatas
-    
+
+# Kondisi jika file belum dimasukkan (Sejajar di kiri dengan 'if')
+st.info("💡 **Silakan masukan data Anda:** Unggah file Excel (.xlsx) yang sesuai dengan struktur kolom di atas untuk memproses analisis model regresi dan melihat hasil prediksi visual.")
+
 st.markdown(
     """
         <div style='text-align: center; margin-top: 30px; margin-bottom: 20px; color: #666666;'>
