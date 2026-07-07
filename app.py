@@ -13,6 +13,16 @@ from sklearn.metrics import (
     mean_squared_error
 )
 
+
+# LANDING PAGE
+logo = Image.open("_ MDPI Primary Logo.png")
+st.set_page_config(
+    page_title="Prediksi Ukuran YFT",
+    page_icon=logo,
+    layout="wide"
+)
+
+
 #Konfigurasi Awal dan Styling Halaman
 st.markdown("""
 <style>
